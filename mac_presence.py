@@ -1,3 +1,4 @@
+'''
 import json
 import time
 import subprocess
@@ -26,7 +27,7 @@ def get_now_playing_music_app() -> Optional[NowPlaying]:
     """
     Reliable AppleScript: returns pipe-delimited values.
     """
-    script = r'''
+    script = r'' '
     tell application "Music"
         if it is not running then
             return "OK=0"
@@ -46,7 +47,7 @@ def get_now_playing_music_app() -> Optional[NowPlaying]:
 
         return "OK=1|" & tName & "|" & tArtist & "|" & tAlbum & "|" & (tDur as string) & "|" & (tPos as string) & "|" & (isPlaying as string)
     end tell
-    '''
+    '' '
 
     try:
         out = subprocess.check_output(["osascript", "-e", script], text=True).strip()
@@ -168,3 +169,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+'''
