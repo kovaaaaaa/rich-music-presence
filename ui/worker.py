@@ -31,6 +31,8 @@ class PresenceWorker(QThread):
         self._rpc = None
         self._last_sig = None
         self._has_presence = False
+        self._last_track_key = None
+        self._last_artwork_url = ""
 
     def stop(self):
         self._running = False
@@ -129,8 +131,14 @@ class PresenceWorker(QThread):
                 time.sleep(self.poll_seconds)
                 continue
 
-            # iTunes lookup (cached)
-            artwork_url, _, _ = lookup_artwork_and_urls(np.title, np.artist)
+            # Artwork lookup only when track changes
+            track_key = (np.title, np.artist, np.album)
+            if track_key != self._last_track_key:
+                artwork_url, _, _ = lookup_artwork_and_urls(np.title, np.artist, np.album)
+                self._last_artwork_url = artwork_url or ""
+                self._last_track_key = track_key
+            else:
+                artwork_url = self._last_artwork_url
 
             # Emit now playing for UI every tick
             d = asdict(np)

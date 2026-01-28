@@ -36,7 +36,7 @@ def connect_to_discord() -> Presence:
 
 
 def update_presence(rpc: Presence, np: NowPlaying):
-    artwork_url, track_url, album_url = lookup_artwork_and_urls(np.title, np.artist)
+    artwork_url, track_url, album_url = lookup_artwork_and_urls(np.title, np.artist, np.album)
 
     payload = {
         "details": np.title[:128],
