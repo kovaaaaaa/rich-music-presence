@@ -1,1 +1,6 @@
 /.venv
+/build
+/build/Rich Music Presence
+/dist
+/build
+dist/Rich Music Presence/_internal/base_library.zip

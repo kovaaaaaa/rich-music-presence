@@ -12,6 +12,7 @@ def main():
     app.setQuitOnLastWindowClosed(False)
     win = MainWindow()
     win.show()
+    app.aboutToQuit.connect(win._stop_worker)
     sys.exit(app.exec())
 
 if __name__ == "__main__":

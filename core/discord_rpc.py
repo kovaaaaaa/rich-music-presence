@@ -53,7 +53,6 @@ def update_presence(
 
         # If we have album art, use it; otherwise fallback to your app asset
         "large_image": artwork_url or "am_logo",
-        "large_text": f"Apple Music • {'Playing' if np.playing else 'Paused'}"[:128],
 
         "small_image": "play" if np.playing else "pause",
         "small_text": (np.album)[:128],

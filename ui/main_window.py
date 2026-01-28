@@ -44,6 +44,7 @@ class MainWindow(QMainWindow):
         self._bg_move = 24
         self._tray = None
         self._icon = self._load_app_icon()
+        self._force_quit = False
 
         root = QWidget()
         root.setObjectName("Root")
@@ -264,6 +265,11 @@ class MainWindow(QMainWindow):
         footer.setObjectName("FooterNote")
         footer.setAlignment(Qt.AlignCenter)
         layout.addWidget(footer)
+
+        version = QLabel("v1.1.0")
+        version.setObjectName("FooterVersion")
+        version.setAlignment(Qt.AlignCenter)
+        layout.addWidget(version)
 
         return page
 
@@ -692,7 +698,7 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event):
         # Minimize to tray if available
-        if self._tray and self._tray.isVisible():
+        if self._tray and self._tray.isVisible() and not self._force_quit:
             self.hide()
             event.ignore()
             return
@@ -733,8 +739,13 @@ class MainWindow(QMainWindow):
             self.setWindowIcon(self._icon)
 
     def _quit_from_tray(self):
+        self._force_quit = True
         self._stop_worker()
-        self.close()
+        app = QGuiApplication.instance()
+        if app:
+            app.quit()
+        else:
+            self.close()
 
     def _load_app_icon(self):
         icon_path = Path(__file__).resolve().parents[1] / "logo.png"
@@ -747,6 +758,12 @@ class MainWindow(QMainWindow):
             return
         try:
             self.worker.stop()
+        except Exception:
+            pass
+        try:
+            if self.worker.isRunning():
+                self.worker.quit()
+                self.worker.wait(2000)
         except Exception:
             pass
         self._set_playing_glow(False)
@@ -913,5 +930,10 @@ class MainWindow(QMainWindow):
             QLabel#FooterNote {{
                 font-size: 11px;
                 color: rgba(255,255,255,0.70);
+            }}
+
+            QLabel#FooterVersion {{
+                font-size: 10px;
+                color: rgba(255,255,255,0.55);
             }}
         """)
