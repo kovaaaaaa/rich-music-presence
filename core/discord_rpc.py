@@ -1,5 +1,6 @@
 #core/discord_rpc.py
 import time
+from typing import Optional
 from pypresence import Presence
 from pypresence.types import ActivityType
 from .models import NowPlaying
@@ -35,8 +36,16 @@ def connect_to_discord() -> Presence:
     return rpc
 
 
-def update_presence(rpc: Presence, np: NowPlaying):
-    artwork_url, track_url, album_url = lookup_artwork_and_urls(np.title, np.artist, np.album)
+def update_presence(
+    rpc: Presence,
+    np: NowPlaying,
+    artwork_url: Optional[str] = None,
+    track_url: Optional[str] = None,
+    album_url: Optional[str] = None,
+    allow_lookup: bool = True,
+):
+    if allow_lookup and (artwork_url is None and track_url is None and album_url is None):
+        artwork_url, track_url, album_url = lookup_artwork_and_urls(np.title, np.artist, np.album)
 
     payload = {
         "details": np.title[:128],

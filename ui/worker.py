@@ -2,6 +2,7 @@
 import time
 import sys
 from dataclasses import asdict
+from concurrent.futures import ThreadPoolExecutor
 
 from PySide6.QtCore import QThread, Signal
 
@@ -33,9 +34,19 @@ class PresenceWorker(QThread):
         self._has_presence = False
         self._last_track_key = None
         self._last_artwork_url = ""
+        self._last_track_url = None
+        self._last_album_url = None
+        self._artwork_future = None
+        self._artwork_future_key = None
+        self._artwork_synced_key = None
+        self._executor = ThreadPoolExecutor(max_workers=1)
 
     def stop(self):
         self._running = False
+        try:
+            self._executor.shutdown(wait=False, cancel_futures=True)
+        except Exception:
+            pass
 
     def _emit_account(self):
         """
@@ -134,11 +145,32 @@ class PresenceWorker(QThread):
             # Artwork lookup only when track changes
             track_key = (np.title, np.artist, np.album)
             if track_key != self._last_track_key:
-                artwork_url, _, _ = lookup_artwork_and_urls(np.title, np.artist, np.album)
-                self._last_artwork_url = artwork_url or ""
+                self._last_artwork_url = ""
+                self._last_track_url = None
+                self._last_album_url = None
+                self._artwork_future_key = track_key
+                self._artwork_synced_key = None
+                try:
+                    self._artwork_future = self._executor.submit(
+                        lookup_artwork_and_urls, np.title, np.artist, np.album
+                    )
+                except Exception:
+                    self._artwork_future = None
                 self._last_track_key = track_key
-            else:
-                artwork_url = self._last_artwork_url
+
+            # Resolve artwork asynchronously
+            if self._artwork_future and self._artwork_future.done():
+                try:
+                    artwork_url, track_url, album_url = self._artwork_future.result()
+                except Exception:
+                    artwork_url, track_url, album_url = None, None, None
+                if self._artwork_future_key == track_key:
+                    self._last_artwork_url = artwork_url or ""
+                    self._last_track_url = track_url
+                    self._last_album_url = album_url
+                self._artwork_future = None
+
+            artwork_url = self._last_artwork_url
 
             # Emit now playing for UI every tick
             d = asdict(np)
@@ -149,12 +181,40 @@ class PresenceWorker(QThread):
             sig = (np.title, np.artist, np.album, np.playing, int(np.position))
             if sig != self._last_sig:
                 try:
-                    update_presence(self._rpc, np)
+                    update_presence(
+                        self._rpc,
+                        np,
+                        artwork_url=artwork_url or "",
+                        track_url=self._last_track_url,
+                        album_url=self._last_album_url,
+                        allow_lookup=False,
+                    )
                     self._has_presence = True
+                    self._artwork_synced_key = track_key if artwork_url else None
                     self.status.emit(f"{'Playing' if np.playing else 'Paused'}: {np.title} — {np.artist}")
                 except Exception as e:
                     self.status.emit(f"Presence update failed: {e}")
 
                 self._last_sig = sig
+
+            # If artwork became available after the initial presence update, refresh once.
+            if (
+                self._has_presence
+                and self._rpc
+                and self._last_artwork_url
+                and self._artwork_synced_key != track_key
+            ):
+                try:
+                    update_presence(
+                        self._rpc,
+                        np,
+                        artwork_url=self._last_artwork_url,
+                        track_url=self._last_track_url,
+                        album_url=self._last_album_url,
+                        allow_lookup=False,
+                    )
+                    self._artwork_synced_key = track_key
+                except Exception:
+                    pass
 
             time.sleep(self.poll_seconds)

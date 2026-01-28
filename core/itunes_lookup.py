@@ -2,6 +2,7 @@ import re
 import requests
 import time
 import urllib.parse
+import os
 from functools import lru_cache
 from typing import Optional, Tuple
 
@@ -12,6 +13,43 @@ def _normalize(value: str) -> str:
     value = re.sub(r"\b(feat|featuring|ft)\b\.?", "", value)
     value = re.sub(r"[^a-z0-9]+", " ", value)
     return " ".join(value.split()).strip()
+
+
+def _normalize_album(value: str) -> str:
+    value = value.lower()
+    # Drop common edition/format markers in parentheses/brackets.
+    value = re.sub(r"[\(\[].*?[\)\]]", " ", value)
+    value = re.sub(r"\b(deluxe|expanded|remaster(ed)?|edition|version|clean|explicit)\b", " ", value)
+    return _normalize(value)
+
+
+def _art_debug_enabled() -> bool:
+    return os.getenv("RMP_ART_DEBUG", "").strip() in {"1", "true", "yes", "on"}
+
+
+def _debug(msg: str):
+    if _art_debug_enabled():
+        print(f"[artwork] {msg}")
+
+
+def _slugify_title(value: str) -> str:
+    value = value.lower()
+    value = re.sub(r"&", "and", value)
+    value = re.sub(r"[^a-z0-9]+", "-", value)
+    value = value.strip("-")
+    value = re.sub(r"-{2,}", "-", value)
+    return value
+
+
+def _url_path_slug(url: str) -> str:
+    try:
+        path = urllib.parse.urlparse(url).path or ""
+        parts = [p for p in path.split("/") if p]
+        if not parts:
+            return ""
+        return parts[-2] if parts[-1].isdigit() and len(parts) >= 2 else parts[-1]
+    except Exception:
+        return ""
 
 # returns (artwork_url, track_url, album_url)
 @lru_cache(maxsize=512)
@@ -28,7 +66,7 @@ def lookup_artwork_and_urls(
         score = 0
         track_name = _normalize(item.get("trackName", "") or "")
         artist_name = _normalize(item.get("artistName", "") or "")
-        album_name = _normalize(item.get("collectionName", "") or "")
+        album_name = _normalize_album(item.get("collectionName", "") or "")
 
         title_tokens = set(title_norm.split())
         track_tokens = set(track_name.split())
@@ -63,9 +101,11 @@ def lookup_artwork_and_urls(
 
         if album_name and album_norm:
             if album_name == album_norm:
-                score += 2
+                score += 6
             elif album_norm in album_name or album_name in album_norm:
-                score += 1
+                score += 2
+            else:
+                score -= 2
 
         if item.get("artworkUrl600") or item.get("artworkUrl100"):
             score += 1
@@ -73,28 +113,73 @@ def lookup_artwork_and_urls(
         return score
 
     def _pick_best(results: list, title_norm: str, artist_norm: str, album_norm: str) -> Optional[dict]:
-        scored = [(item, _score(item, title_norm, artist_norm, album_norm)) for item in results]
+        # If we have an album name, prefer results whose album overlaps at all.
+        filtered = []
+        if album_norm:
+            for item in results:
+                album_name = _normalize_album(item.get("collectionName", "") or "")
+                if not album_name:
+                    continue
+                if album_name == album_norm or album_norm in album_name or album_name in album_norm:
+                    filtered.append(item)
+        pool = filtered or results
+        scored = [(item, _score(item, title_norm, artist_norm, album_norm)) for item in pool]
         scored.sort(key=lambda x: x[1], reverse=True)
         item, best_score = scored[0]
-        min_score = 5 if artist_norm else 4
+        min_score = 4 if artist_norm else 3
         if best_score < min_score:
             return None
         return item
 
     title_norm = _normalize(title)
     artist_norm = _normalize(artist)
-    album_norm = _normalize(album)
+    album_norm = _normalize_album(album)
 
-    # 1) MusicBrainz + Cover Art Archive
+    # 1) iTunes slug-priority pass (if possible)
+    slug = _slugify_title(title)
+    if slug:
+        term = f"{title} {artist} {album}".strip()
+        q = urllib.parse.quote(term)
+        url = f"https://itunes.apple.com/search?term={q}&entity=song&limit=8"
+        try:
+            r = _HTTP.get(url, timeout=4)
+            r.raise_for_status()
+            data = r.json()
+            results = data.get("results", [])
+            if results:
+                slug_matches = []
+                for item in results:
+                    track_url = item.get("trackViewUrl") or ""
+                    if not track_url:
+                        continue
+                    url_slug = _url_path_slug(track_url)
+                    if url_slug == slug:
+                        slug_matches.append(item)
+                if slug_matches:
+                    item = _pick_best(slug_matches, title_norm, artist_norm, album_norm)
+                    if item:
+                        artwork = item.get("artworkUrl600") or item.get("artworkUrl100")
+                        track_url = item.get("trackViewUrl")
+                        album_url = item.get("collectionViewUrl")
+                        if artwork:
+                            artwork = re.sub(r"/\d+x\d+", "/512x512", artwork)
+                        _debug(
+                            f"itunes slug match: '{item.get('trackName')}' on '{item.get('collectionName')}'"
+                        )
+                        return artwork, track_url, album_url
+        except Exception:
+            pass
+
+    # 2) MusicBrainz + Cover Art Archive
     mb_artwork, mb_track_url, mb_album_url = _lookup_musicbrainz(title, artist, album)
     if mb_artwork:
         return mb_artwork, mb_track_url, mb_album_url
 
-    # 2) iTunes fallback
+    # 3) iTunes fallback
     if album_norm:
         album_term = f"{album} {artist}".strip()
         album_q = urllib.parse.quote(album_term)
-        album_url = f"https://itunes.apple.com/search?term={album_q}&entity=album&limit=6"
+        album_url = f"https://itunes.apple.com/search?term={album_q}&entity=album&limit=10"
         try:
             r = _HTTP.get(album_url, timeout=4)
             r.raise_for_status()
@@ -104,17 +189,19 @@ def lookup_artwork_and_urls(
                 scored = []
                 for item in results:
                     a_name = _normalize(item.get("artistName", "") or "")
-                    c_name = _normalize(item.get("collectionName", "") or "")
+                    c_name = _normalize_album(item.get("collectionName", "") or "")
                     score = 0
                     if c_name == album_norm:
-                        score += 6
+                        score += 8
                     elif album_norm in c_name or c_name in album_norm:
-                        score += 3
+                        score += 4
                     if a_name and artist_norm:
                         if a_name == artist_norm:
                             score += 4
                         elif artist_norm in a_name or a_name in artist_norm:
                             score += 2
+                        else:
+                            score -= 2
                     if item.get("artworkUrl100") or item.get("artworkUrl60"):
                         score += 1
                     scored.append((item, score))
@@ -123,17 +210,19 @@ def lookup_artwork_and_urls(
                 if best_score >= 5:
                     artwork = best_album.get("artworkUrl100") or best_album.get("artworkUrl60")
                     album_url = best_album.get("collectionViewUrl")
-                    if artwork and "100x100" in artwork:
-                        artwork = artwork.replace("100x100", "512x512")
+                    if artwork:
+                        artwork = re.sub(r"/\d+x\d+", "/512x512", artwork)
+                    _debug(
+                        f"itunes album match: '{best_album.get('collectionName')}' by '{best_album.get('artistName')}'"
+                    )
                     return artwork, None, album_url
         except Exception:
             pass
 
-    term = f"{title} {artist} {album}".strip()
-    q = urllib.parse.quote(term)
-    url = f"https://itunes.apple.com/search?term={q}&entity=song&limit=8"
-
     try:
+        term = f"{title} {artist} {album}".strip()
+        q = urllib.parse.quote(term)
+        url = f"https://itunes.apple.com/search?term={q}&entity=song&limit=8"
         r = _HTTP.get(url, timeout=4)
         r.raise_for_status()
         data = r.json()
@@ -148,8 +237,11 @@ def lookup_artwork_and_urls(
         track_url = item.get("trackViewUrl")
         album_url = item.get("collectionViewUrl")  # album link
 
-        if artwork and "100x100" in artwork:
-            artwork = artwork.replace("100x100", "512x512")
+        if artwork:
+            artwork = re.sub(r"/\d+x\d+", "/512x512", artwork)
+        _debug(
+            f"itunes track match: '{item.get('trackName')}' on '{item.get('collectionName')}'"
+        )
 
         return artwork, track_url, album_url
     except Exception:
@@ -164,6 +256,8 @@ _HTTP = requests.Session()
 
 def _mb_headers() -> dict:
     return {"User-Agent": MB_USER_AGENT}
+
+
 
 
 def _mb_query(title: str, artist: str, album: str) -> str:
@@ -196,7 +290,7 @@ def _pick_best_recording(recordings: list, title_norm: str, artist_norm: str, al
         releases = rec.get("releases", []) or []
         if releases and album_norm:
             for rel in releases:
-                rel_title = _normalize(rel.get("title", "") or "")
+                rel_title = _normalize_album(rel.get("title", "") or "")
                 if rel_title == album_norm:
                     s += 2
                     break
@@ -227,7 +321,7 @@ def _pick_release_with_art(releases: list, album_norm: str) -> Optional[dict]:
     scored = []
     for rel in releases:
         s = 0
-        rel_title = _normalize(rel.get("title", "") or "")
+        rel_title = _normalize_album(rel.get("title", "") or "")
         if album_norm:
             if rel_title == album_norm:
                 s += 3
@@ -251,7 +345,7 @@ def _lookup_musicbrainz(title: str, artist: str, album: str) -> Tuple[Optional[s
 
     title_norm = _normalize(title)
     artist_norm = _normalize(artist)
-    album_norm = _normalize(album)
+    album_norm = _normalize_album(album)
 
     params = {
         "query": _mb_query(title, artist, album),
@@ -302,6 +396,9 @@ def _lookup_musicbrainz(title: str, artist: str, album: str) -> Tuple[Optional[s
         artwork_url = front.get("image")
         album_url = f"https://musicbrainz.org/release/{rel_id}"
         track_url = None
+        _debug(
+            f"musicbrainz match: '{rec.get('title')}' -> release '{rel.get('title')}'"
+        )
         return artwork_url, track_url, album_url
     except Exception:
         return None, None, None
