@@ -2,10 +2,11 @@
 import math
 import random
 import urllib.request
+from pathlib import Path
 
 from PySide6.QtCore import Qt, QEasingCurve, QPoint, QPointF, QPropertyAnimation, QParallelAnimationGroup, QSequentialAnimationGroup
 from PySide6.QtGui import QGuiApplication
-from PySide6.QtGui import QColor, QPainter, QPainterPath, QPixmap
+from PySide6.QtGui import QColor, QIcon, QPainter, QPainterPath, QPixmap
 from PySide6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QFrame, QStackedWidget, QProgressBar,
@@ -42,6 +43,7 @@ class MainWindow(QMainWindow):
         self._bg_margin = 36
         self._bg_move = 24
         self._tray = None
+        self._icon = self._load_app_icon()
 
         root = QWidget()
         root.setObjectName("Root")
@@ -74,6 +76,8 @@ class MainWindow(QMainWindow):
         self._fade_in_root()
 
         self._init_tray()
+        if self._icon:
+            self.setWindowIcon(self._icon)
 
         # Always start on connect screen for now
         self.stack.setCurrentWidget(self.connect_page)
@@ -702,6 +706,8 @@ class MainWindow(QMainWindow):
 
         tray = QSystemTrayIcon(self)
         tray.setToolTip("Rich Music Presence")
+        if self._icon:
+            tray.setIcon(self._icon)
 
         menu = QMenu()
         action_show = menu.addAction("Show")
@@ -723,10 +729,18 @@ class MainWindow(QMainWindow):
         self.show()
         self.raise_()
         self.activateWindow()
+        if self._icon:
+            self.setWindowIcon(self._icon)
 
     def _quit_from_tray(self):
         self._stop_worker()
         self.close()
+
+    def _load_app_icon(self):
+        icon_path = Path(__file__).resolve().parents[1] / "logo.png"
+        if icon_path.exists():
+            return QIcon(str(icon_path))
+        return None
 
     def _stop_worker(self):
         if not self.worker:

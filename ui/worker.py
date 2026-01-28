@@ -1,10 +1,19 @@
 # ui/worker.py
 import time
+import sys
 from dataclasses import asdict
 
 from PySide6.QtCore import QThread, Signal
 
-from core.music_macos import get_now_playing
+if sys.platform == "win32":
+    try:
+        from core.music_windows import get_now_playing
+    except Exception:
+        get_now_playing = None
+elif sys.platform == "darwin":
+    from core.music_macos import get_now_playing
+else:
+    get_now_playing = None
 from core.discord_rpc import connect_to_discord, update_presence
 from core.itunes_lookup import lookup_artwork_and_urls
 
@@ -81,6 +90,10 @@ class PresenceWorker(QThread):
             self._emit_account()
         except Exception as e:
             self.status.emit(f"Discord connect failed: {e}")
+            return
+
+        if not get_now_playing:
+            self.status.emit("Music source unavailable on this OS")
             return
 
         # 2) Main loop
