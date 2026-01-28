@@ -22,6 +22,7 @@ def _timespan_seconds(value) -> float:
     except Exception:
         pass
     try:
+        # Some WinRT bindings expose a "duration" in 100ns ticks.
         return float(value.duration) / 10_000_000.0
     except Exception:
         return 0.0
