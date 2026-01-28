@@ -1,12 +1,13 @@
 # dmgbuild/settings.py
+import os
 import os.path
 
 APP_NAME = "Rich Music Presence"
-APP_PATH = "dist/Rich Music Presence.app"
 DMG_NAME = "RichMusicPresence"
 
-ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-BG_PATH = os.path.join(ROOT_DIR, "dmgbackground.png")
+# Run dmgbuild from the repo root, or set DMG_ROOT to that path.
+ROOT_DIR = os.path.abspath(os.environ.get("DMG_ROOT", os.getcwd()))
+APP_PATH = os.path.join(ROOT_DIR, "dist", f"{APP_NAME}.app")
 
 application = APP_NAME
 format = "UDZO"
@@ -19,7 +20,7 @@ icon_size = 128
 text_size = 12
 badge_icon = os.path.join(ROOT_DIR, "logo.png")
 
-background = BG_PATH
+background = None
 window_rect = ((200, 120), (640, 420))
 icon_locations = {
     "Rich Music Presence.app": (180, 210),
