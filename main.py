@@ -1,8 +1,18 @@
 #main.py
+import sys
 import time
 
-from core.music_macos import get_now_playing
 from core.discord_rpc import connect_to_discord, update_presence
+
+if sys.platform == "win32":
+    try:
+        from core.music_windows import get_now_playing
+    except Exception:
+        get_now_playing = None
+elif sys.platform == "darwin":
+    from core.music_macos import get_now_playing
+else:
+    get_now_playing = None
 
 
 POLL_SECONDS = 5
@@ -13,6 +23,10 @@ def signature(np):
 
 
 def main():
+    if not get_now_playing:
+        print("[Music] Unsupported OS or missing Windows dependency (winsdk).")
+        return
+
     rpc = connect_to_discord()
 
     last_sig = None

@@ -1,8 +1,10 @@
 # core/music_windows.py
 import asyncio
+import time
 from typing import Optional
 
 from .models import NowPlaying
+from .debug import debug_log
 
 try:
     from winsdk.windows.media.control import (
@@ -12,6 +14,8 @@ try:
 except Exception:  # winsdk not installed or not on Windows
     MediaManager = None
     PlaybackStatus = None
+
+_last_session_log = 0.0
 
 
 def _timespan_seconds(value) -> float:
@@ -51,11 +55,64 @@ async def _get_now_playing_async() -> Optional[NowPlaying]:
         return None
 
     manager = await MediaManager.request_async()
-    session = manager.get_current_session()
-    if not session:
-        return None
+    session = None
+    try:
+        current = manager.get_current_session()
+        if current and _is_apple_music_session(current):
+            session = current
+    except Exception:
+        session = None
 
-    if not _is_apple_music_session(session):
+    if not session:
+        try:
+            sessions = manager.get_sessions()
+        except Exception:
+            sessions = []
+
+        fallback = None
+        for candidate in sessions:
+            if not _is_apple_music_session(candidate):
+                continue
+
+            try:
+                playback = candidate.get_playback_info()
+                status = playback.playback_status
+            except Exception:
+                status = None
+
+            if status == PlaybackStatus.PLAYING:
+                session = candidate
+                break
+
+            if fallback is None:
+                fallback = candidate
+
+        session = session or fallback
+
+        if not session and sessions:
+            global _last_session_log
+            now = time.time()
+            if now - _last_session_log > 5:
+                _last_session_log = now
+                names = []
+                for candidate in sessions:
+                    try:
+                        app_id = candidate.source_app_user_model_id or ""
+                    except Exception:
+                        app_id = ""
+                    try:
+                        name = candidate.get_app_user_model_id() or ""
+                    except Exception:
+                        name = ""
+                    try:
+                        playback = candidate.get_playback_info()
+                        status = playback.playback_status
+                    except Exception:
+                        status = None
+                    names.append(f"app_id='{app_id}' name='{name}' status='{status}'")
+                debug_log("No Apple Music session. Sessions: " + " | ".join(names))
+
+    if not session:
         return None
 
     try:

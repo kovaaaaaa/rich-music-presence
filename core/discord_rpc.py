@@ -1,9 +1,11 @@
 #core/discord_rpc.py
+import os
 import time
 from typing import Optional
 from pypresence import Presence
 from pypresence.types import ActivityType
 from .models import NowPlaying
+from .debug import debug_log
 from .itunes_lookup import lookup_artwork_and_urls
 import urllib.parse
 
@@ -16,8 +18,12 @@ def apple_music_search_url(title: str, artist: str) -> str:
     q = urllib.parse.quote(f"{title} {artist}".strip())
     return f"https://music.apple.com/us/search?term={q}"
 
-def connect_to_discord() -> Presence:
-    rpc = Presence(APP_CLIENT_ID)
+def _connect_on_pipe(pipe: Optional[int]) -> Presence:
+    if pipe is None:
+        rpc = Presence(APP_CLIENT_ID)
+    else:
+        rpc = Presence(APP_CLIENT_ID, pipe=pipe)
+    debug_log(f"Discord connect attempt pipe={pipe if pipe is not None else 'auto'}")
     rpc.connect()
 
     # Give Discord time to send READY payload
@@ -29,11 +35,35 @@ def connect_to_discord() -> Presence:
         disc = user.get("discriminator", "")
         display = f"{name}#{disc}" if disc and disc != "0" else name
 
-        print(f"[RPC] Connected as {display}")
+        pipe_label = "auto" if pipe is None else str(pipe)
+        print(f"[RPC] Connected as {display} (pipe {pipe_label})")
+        debug_log(f"Discord connected as {display} (pipe {pipe_label})")
     except Exception:
         print("[RPC] Connected")
+        debug_log("Discord connected (user payload unavailable)")
 
     return rpc
+
+
+def connect_to_discord() -> Presence:
+    pipe_env = os.getenv("DISCORD_RPC_PIPE")
+    if pipe_env:
+        try:
+            return _connect_on_pipe(int(pipe_env))
+        except Exception as e:
+            debug_log(f"Discord connect failed on env pipe {pipe_env}: {e}")
+            raise RuntimeError(f"Discord connect failed on pipe {pipe_env}: {e}") from e
+
+    last_error = None
+    for pipe in [None, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9]:
+        try:
+            return _connect_on_pipe(pipe)
+        except Exception as e:
+            last_error = e
+            debug_log(f"Discord connect failed on pipe {pipe}: {e}")
+            continue
+
+    raise RuntimeError(f"Discord connect failed on all pipes: {last_error}")
 
 
 def update_presence(
@@ -44,6 +74,10 @@ def update_presence(
     album_url: Optional[str] = None,
     allow_lookup: bool = True,
 ):
+    debug_log(
+        f"Update presence: title='{np.title}', artist='{np.artist}', "
+        f"album='{np.album}', playing={np.playing}"
+    )
     if allow_lookup and (artwork_url is None and track_url is None and album_url is None):
         artwork_url, track_url, album_url = lookup_artwork_and_urls(np.title, np.artist, np.album)
 
@@ -55,7 +89,7 @@ def update_presence(
         "large_image": artwork_url or "am_logo",
 
         "small_image": "play" if np.playing else "pause",
-        "small_text": (np.album)[:128],
+        "small_text": (np.album[:128] if np.album else None),
 
         "activity_type": ActivityType.LISTENING,
     }

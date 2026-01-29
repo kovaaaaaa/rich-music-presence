@@ -1,0 +1,62 @@
+[2026-01-28 23:17:48] Discord connect attempt pipe=auto
+[2026-01-28 23:17:48] Discord connected (user payload unavailable)
+[2026-01-28 23:17:51] Update presence: title='Did It Again', artist='Lil Tecca — We Love You Tecca', album='', playing=True
+[2026-01-28 23:17:51] Presence update failed: Child "activity" fails because child "assets" fails because child "small_text" fails because "small_text" is not allowed to be empty
+[2026-01-28 23:17:56] Update presence: title='Did It Again', artist='Lil Tecca — We Love You Tecca', album='', playing=True
+[2026-01-28 23:17:56] Presence update failed: Child "activity" fails because child "assets" fails because child "small_text" fails because "small_text" is not allowed to be empty
+[2026-01-28 23:18:01] Update presence: title='Did It Again', artist='Lil Tecca — We Love You Tecca', album='', playing=True
+[2026-01-28 23:18:01] Presence update failed: Child "activity" fails because child "assets" fails because child "small_text" fails because "small_text" is not allowed to be empty
+[2026-01-28 23:18:06] Update presence: title='Did It Again', artist='Lil Tecca — We Love You Tecca', album='', playing=True
+[2026-01-28 23:18:06] Presence update failed: Child "activity" fails because child "assets" fails because child "small_text" fails because "small_text" is not allowed to be empty
+[2026-01-28 23:18:11] Update presence: title='Did It Again', artist='Lil Tecca — We Love You Tecca', album='', playing=True
+[2026-01-28 23:18:11] Presence update failed: Child "activity" fails because child "assets" fails because child "small_text" fails because "small_text" is not allowed to be empty
+[2026-01-28 23:18:16] Update presence: title='Did It Again', artist='Lil Tecca — We Love You Tecca', album='', playing=True
+[2026-01-28 23:18:16] Presence update failed: Child "activity" fails because child "assets" fails because child "small_text" fails because "small_text" is not allowed to be empty
+[2026-01-28 23:19:16] Discord connect attempt pipe=auto
+[2026-01-28 23:19:16] Discord connected (user payload unavailable)
+[2026-01-28 23:19:19] Update presence: title='Did It Again', artist='Lil Tecca — We Love You Tecca', album='', playing=True
+[2026-01-28 23:19:20] Update presence: title='Did It Again', artist='Lil Tecca — We Love You Tecca', album='', playing=True
+[2026-01-28 23:19:21] Update presence: title='Did It Again', artist='Lil Tecca — We Love You Tecca', album='', playing=True
+[2026-01-28 23:19:26] Update presence: title='Did It Again', artist='Lil Tecca — We Love You Tecca', album='', playing=True
+[2026-01-28 23:19:31] Update presence: title='Did It Again', artist='Lil Tecca — We Love You Tecca', album='', playing=True
+[2026-01-28 23:19:36] Update presence: title='Did It Again', artist='Lil Tecca — We Love You Tecca', album='', playing=True
+[2026-01-28 23:19:41] Update presence: title='Did It Again', artist='Lil Tecca — We Love You Tecca', album='', playing=True
+[2026-01-28 23:19:46] Update presence: title='Did It Again', artist='Lil Tecca — We Love You Tecca', album='', playing=True
+[2026-01-28 23:19:51] Update presence: title='Did It Again', artist='Lil Tecca — We Love You Tecca', album='', playing=True
+[2026-01-28 23:19:57] Update presence: title='Did It Again', artist='Lil Tecca — We Love You Tecca', album='', playing=True
+[2026-01-28 23:20:02] Update presence: title='Did It Again', artist='Lil Tecca — We Love You Tecca', album='', playing=True
+[2026-01-28 23:20:07] Update presence: title='Did It Again', artist='Lil Tecca — We Love You Tecca', album='', playing=True
+[2026-01-28 23:20:12] Update presence: title='Did It Again', artist='Lil Tecca — We Love You Tecca', album='', playing=True
+[2026-01-28 23:20:17] Update presence: title='Did It Again', artist='Lil Tecca — We Love You Tecca', album='', playing=True
+[2026-01-28 23:20:22] Update presence: title='Did It Again', artist='Lil Tecca — We Love You Tecca', album='', playing=True
+[2026-01-28 23:20:27] Update presence: title='BIRDBRAIN (feat. OK Glass)', artist='Jamie Paige — BIRDBRAIN (feat. OK Glass) - Single', album='', playing=True
+[2026-01-28 23:20:33] Update presence: title='BIRDBRAIN (feat. OK Glass)', artist='Jamie Paige — BIRDBRAIN (feat. OK Glass) - Single', album='', playing=True
+[2026-01-28 23:20:38] Update presence: title='BIRDBRAIN (feat. OK Glass)', artist='Jamie Paige — BIRDBRAIN (feat. OK Glass) - Single', album='', playing=True
+[2026-01-28 23:20:43] Update presence: title='BIRDBRAIN (feat. OK Glass)', artist='Jamie Paige — BIRDBRAIN (feat. OK Glass) - Single', album='', playing=True
+[2026-01-28 23:20:48] Update presence: title='BIRDBRAIN (feat. OK Glass)', artist='Jamie Paige — BIRDBRAIN (feat. OK Glass) - Single', album='', playing=True
+[2026-01-28 23:20:53] Update presence: title='BIRDBRAIN (feat. OK Glass)', artist='Jamie Paige — BIRDBRAIN (feat. OK Glass) - Single', album='', playing=True
+[2026-01-28 23:20:58] Update presence: title='BIRDBRAIN (feat. OK Glass)', artist='Jamie Paige — BIRDBRAIN (feat. OK Glass) - Single', album='', playing=True
+[2026-01-28 23:21:03] Update presence: title='BIRDBRAIN (feat. OK Glass)', artist='Jamie Paige — BIRDBRAIN (feat. OK Glass) - Single', album='', playing=True
+[2026-01-28 23:21:08] Update presence: title='BIRDBRAIN (feat. OK Glass)', artist='Jamie Paige — BIRDBRAIN (feat. OK Glass) - Single', album='', playing=True
+[2026-01-28 23:21:13] Update presence: title='BIRDBRAIN (feat. OK Glass)', artist='Jamie Paige — BIRDBRAIN (feat. OK Glass) - Single', album='', playing=True
+[2026-01-28 23:21:19] Update presence: title='BIRDBRAIN (feat. OK Glass)', artist='Jamie Paige — BIRDBRAIN (feat. OK Glass) - Single', album='', playing=True
+[2026-01-28 23:21:24] Update presence: title='BIRDBRAIN (feat. OK Glass)', artist='Jamie Paige — BIRDBRAIN (feat. OK Glass) - Single', album='', playing=True
+[2026-01-28 23:21:29] Update presence: title='BIRDBRAIN (feat. OK Glass)', artist='Jamie Paige — BIRDBRAIN (feat. OK Glass) - Single', album='', playing=True
+[2026-01-28 23:21:34] Update presence: title='BIRDBRAIN (feat. OK Glass)', artist='Jamie Paige — BIRDBRAIN (feat. OK Glass) - Single', album='', playing=True
+[2026-01-28 23:21:39] Update presence: title='BIRDBRAIN (feat. OK Glass)', artist='Jamie Paige — BIRDBRAIN (feat. OK Glass) - Single', album='', playing=True
+[2026-01-28 23:21:44] Update presence: title='Foreword (feat. Rex Orange County)', artist='Tyler, The Creator — Flower Boy', album='', playing=True
+[2026-01-28 23:21:50] Update presence: title='Foreword (feat. Rex Orange County)', artist='Tyler, The Creator — Flower Boy', album='', playing=True
+[2026-01-28 23:21:52] Update presence: title='Foreword (feat. Rex Orange County)', artist='Tyler, The Creator — Flower Boy', album='', playing=True
+[2026-01-28 23:21:53] Update presence: title='Foreword (feat. Rex Orange County)', artist='Tyler, The Creator — Flower Boy', album='', playing=True
+[2026-01-28 23:21:55] Update presence: title='Foreword (feat. Rex Orange County)', artist='Tyler, The Creator — Flower Boy', album='', playing=True
+[2026-01-28 23:21:57] Update presence: title='Foreword (feat. Rex Orange County)', artist='Tyler, The Creator — Flower Boy', album='', playing=True
+[2026-01-28 23:22:03] Update presence: title='Foreword (feat. Rex Orange County)', artist='Tyler, The Creator — Flower Boy', album='', playing=True
+[2026-01-28 23:22:08] Update presence: title='Foreword (feat. Rex Orange County)', artist='Tyler, The Creator — Flower Boy', album='', playing=True
+[2026-01-28 23:22:13] Update presence: title='Foreword (feat. Rex Orange County)', artist='Tyler, The Creator — Flower Boy', album='', playing=True
+[2026-01-28 23:22:18] Update presence: title='Foreword (feat. Rex Orange County)', artist='Tyler, The Creator — Flower Boy', album='', playing=True
+[2026-01-28 23:22:24] Update presence: title='Foreword (feat. Rex Orange County)', artist='Tyler, The Creator — Flower Boy', album='', playing=True
+[2026-01-28 23:22:29] Update presence: title='Foreword (feat. Rex Orange County)', artist='Tyler, The Creator — Flower Boy', album='', playing=True
+[2026-01-28 23:22:34] Update presence: title='Foreword (feat. Rex Orange County)', artist='Tyler, The Creator — Flower Boy', album='', playing=True
+[2026-01-28 23:22:39] Update presence: title='Foreword (feat. Rex Orange County)', artist='Tyler, The Creator — Flower Boy', album='', playing=True
+[2026-01-28 23:22:44] Update presence: title='Foreword (feat. Rex Orange County)', artist='Tyler, The Creator — Flower Boy', album='', playing=True
+[2026-01-28 23:22:45] Update presence: title='Foreword (feat. Rex Orange County)', artist='Tyler, The Creator — Flower Boy', album='', playing=True

@@ -16,6 +16,7 @@ elif sys.platform == "darwin":
 else:
     get_now_playing = None
 from core.discord_rpc import connect_to_discord, update_presence
+from core.debug import debug_log
 from core.itunes_lookup import lookup_artwork_and_urls
 
 
@@ -103,6 +104,7 @@ class PresenceWorker(QThread):
             self._emit_account()
         except Exception as e:
             self.status.emit(f"Discord connect failed: {e}")
+            debug_log(f"Discord connect failed: {e}")
             return
 
         if not get_now_playing:
@@ -115,6 +117,7 @@ class PresenceWorker(QThread):
                 np = get_now_playing()
             except Exception as e:
                 self.status.emit(f"Apple Music read failed: {e}")
+                debug_log(f"Apple Music read failed: {e}")
                 time.sleep(self.poll_seconds)
                 continue
 
@@ -194,6 +197,7 @@ class PresenceWorker(QThread):
                     self.status.emit(f"{'Playing' if np.playing else 'Paused'}: {np.title} — {np.artist}")
                 except Exception as e:
                     self.status.emit(f"Presence update failed: {e}")
+                    debug_log(f"Presence update failed: {e}")
 
                 self._last_sig = sig
 
